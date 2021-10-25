@@ -136,19 +136,19 @@ const char *_logFormatOutput(LogLevels log_level, bool colorize, const char *fun
     break;
   }
 
-  char *buffer = (char *)malloc(LOGGER_MAX_BUFFER);
+  char *buffer = (char *)malloc(LOGGER_MAX_BUFFER + 1);
   if (!buffer) {
     return NULL;
   }
 
-  char *final_buffer = (char *)malloc(LOGGER_MAX_BUFFER);
+  char *final_buffer = (char *)malloc(LOGGER_MAX_BUFFER + 1);
   if (!final_buffer) {
     free(buffer);
     return NULL;
   }
 
-  memset(buffer, '\0', LOGGER_MAX_BUFFER);
-  memset(final_buffer, '\0', LOGGER_MAX_BUFFER);
+  memset(buffer, '\0', LOGGER_MAX_BUFFER + 1);
+  memset(final_buffer, '\0', LOGGER_MAX_BUFFER + 1);
 
   va_list args;
   va_start(args, format);
@@ -169,7 +169,7 @@ const char *_logFormatOutput(LogLevels log_level, bool colorize, const char *fun
 const char *_logPrettyFunction(const char *prettyFunction) {
   size_t pos = strlaststr(prettyFunction, " ") - prettyFunction + 1;
   size_t len = strlen(prettyFunction) - pos - 1;
-  char *output_buffer = (char *)malloc(len);
+  char *output_buffer = (char *)malloc(len + 1);
   if (!output_buffer) {
     return NULL;
   }
@@ -215,7 +215,7 @@ void logSystemUnformatted(LogLevels log_level, const char *format, ...) {
     return;
   }
 
-  char *buffer = (char *)malloc(LOGGER_MAX_BUFFER);
+  char *buffer = (char *)malloc(LOGGER_MAX_BUFFER + 1);
   if (!buffer) {
     return;
   }
@@ -281,12 +281,12 @@ void logFileUnformatted(LogLevels log_level, const char *path, const char *forma
     return;
   }
 
-  char *buffer = (char *)malloc(LOGGER_MAX_BUFFER);
+  char *buffer = (char *)malloc(LOGGER_MAX_BUFFER + 1);
   if (!buffer) {
     return;
   }
 
-  memset(buffer, '\0', LOGGER_MAX_BUFFER);
+  memset(buffer, '\0', LOGGER_MAX_BUFFER + 1);
 
   va_list args;
   va_start(args, format);
@@ -312,11 +312,13 @@ LogLevels logFileGetLogLevel() {
   return g_file_log_level;
 }
 
+
 bool logFileOpen(const char *path) {
   if (logFileGetLogFile()) {
     // We should either close the currently open file and open the new file, or return false to "fail"
     return false; // or logFileClose();
   }
+
 
   g_log_file = fopen(path, "a");
 
@@ -327,12 +329,19 @@ bool logFileOpen(const char *path) {
   return true;
 }
 
+
+
 void logFileClose() {
   if (!logFileGetLogFile()) {
+       printf("logFileGetLogFile() < 0\n");
     return;
   }
 
-  fclose(g_log_file);
+  printf("g_log_file %p\n", g_log_file);
+
+  if (g_log_file != nullptr)
+      //g_log_file->close();
+
   g_log_file = NULL;
 }
 
@@ -370,11 +379,14 @@ bool logSocketOpen() {
     }
   }
 
+  printf("SOCKET %i\n", g_socket);
+
   return true;
 }
 
 void logSocketClose() {
   if (logSocketGetSocket() < 0) {
+    printf("logSocketGetSocket() < 0\n");
     return;
   }
 
@@ -386,16 +398,17 @@ int logSocketGetSocket() {
   return g_socket;
 }
 
-void _sendSocket(const char *ip_address, uint16_t port, const char *data, size_t len) {
-  struct sockaddr_in servaddr;
-  memset(&servaddr, '\0', sizeof(servaddr));
+void _sendSocket(const char* ip_address, uint16_t port, const char* data, size_t len) {
+    struct sockaddr_in servaddr;
+    memset(&servaddr, '\0', sizeof(servaddr));
 
-  servaddr.sin_family = AF_INET;
-  servaddr.sin_addr.s_addr = inet_addr(ip_address);
-  servaddr.sin_port = htons(port);
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_addr.s_addr = inet_addr(ip_address);
+    servaddr.sin_port = htons(port);
 
-  sendto(logSocketGetSocket(), data, len, 0, (sockaddr *)&servaddr, sizeof(servaddr));
+    printf("sent %zu\n", sendto(logSocketGetSocket(), data, len, 0, (sockaddr*)&servaddr, sizeof(servaddr)));
 }
+
 
 void _logSocket(LogLevels log_level, const char *ip_address, uint16_t port, const char *function, int32_t line, const char *format, ...) {
   if (logSocketGetSocket() < 0) {
@@ -436,7 +449,7 @@ void logSocketUnformatted(LogLevels log_level, const char *ip_address, uint16_t 
     return;
   }
 
-  char *buffer = (char *)malloc(LOGGER_MAX_BUFFER);
+  char *buffer = (char *)malloc(LOGGER_MAX_BUFFER + 1);
   if (!buffer) {
     return;
   }
@@ -539,7 +552,7 @@ inline static int _logHexdumpSize(int input) {
 // Hexdump based on: https://stackoverflow.com/a/29865
 const char *logHexdump(LogLevels log_level, const void *ptr, int len, bool colorize) {
   unsigned char *buf = (unsigned char *)ptr;
-  char *ret = (char *)malloc(_logHexdumpSize(len));
+  char *ret = (char *)malloc(_logHexdumpSize(len) + 1);
   if (!ret) {
     return NULL;
   }

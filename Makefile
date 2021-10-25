@@ -1,15 +1,16 @@
 PROJECTNAME 	:= libLog
-TOOLCHAIN			:= $(OO_PS4_TOOLCHAIN)
+TOOLCHAIN	:= $(OO_PS4_TOOLCHAIN)
 
 # Libraries linked into the ELF.
-LIBS 					:= -lc -lc++ -lkernel
+LIBS 					:= -lSceLibcInternal -lkernel
 
 # Compiler options. You likely won't need to touch these.
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
 		CC  			:= clang++
-		LD 				:= ld.lld
+		LD 			:= ld.lld
 		CDIR			:= linux
+                ASMLR                   := as
 endif
 ifeq ($(UNAME_S),Darwin)
 		CC 				:= /usr/local/opt/llvm/bin/clang++
@@ -24,10 +25,11 @@ COMPILE_OPTS	:= -D__ORBIS__
 CFLAGS 				:= -cc1 -triple x86_64-pc-freebsd-elf -munwind-tables $(IDIRS) -fuse-init-array -debug-info-kind=limited -debugger-tuning=gdb -emit-obj -Wall
 LFLAGS 				:= -m elf_x86_64 -pie --script $(TOOLCHAIN)/link.x --eh-frame-hdr $(LDIRS) $(LIBS) $(TOOLCHAIN)/lib/crtlib.o
 
-CFILES	 			:= $(wildcard $(SDIR)/*.c)
-CPPFILES	 		:= $(wildcard $(SDIR)/*.cpp)
-OBJS 					:= $(patsubst $(SDIR)/%.c, $(ODIR)/%.o, $(CFILES)) $(patsubst $(SDIR)/%.cpp, $(ODIR)/%.o, $(CPPFILES))
-STUBOBJS 			:= $(patsubst $(SDIR)/%.c, $(ODIR)/%.o.stub, $(CFILES)) $(patsubst $(SDIR)/%.cpp, $(ODIR)/%.o.stub, $(CPPFILES))
+CFILES 		:= $(wildcard $(SDIR)/*.c)
+CPPFILES 	:= $(wildcard $(SDIR)/*.cpp)
+ASMFILES 	:= $(wildcard $(SDIR)/*.s)
+OBJS 		:= $(patsubst $(SDIR)/%.s, $(ODIR)/%.o, $(ASMFILES)) $(patsubst $(SDIR)/%.c, $(ODIR)/%.o, $(CFILES))  $(patsubst $(SDIR)/%.cpp, $(ODIR)/%.o, $(CPPFILES))
+STUBOBJS 	:= $(patsubst $(SDIR)/%.c, $(ODIR)/%.o.stub, $(CFILES)) $(patsubst $(SDIR)/%.cpp, $(ODIR)/%.o.stub, $(CPPFILES))
 
 TARGET 				= $(PROJECTNAME).prx
 TARGETSTUB 		= $(PROJECTNAME)_stub.so
@@ -46,6 +48,10 @@ $(TARGETSTUB): $(ODIR) $(STUBOBJS)
 
 $(ODIR)/%.o: $(SDIR)/%.c
 	$(CC) $(CFLAGS) $(COMPILE_OPTS) -o $@ $<
+
+
+$(ODIR)/%.o: $(SDIR)/%.s
+	$(ASMLR) -o $@ $<
 
 $(ODIR)/%.o: $(SDIR)/%.cpp
 	$(CC) $(CFLAGS) $(COMPILE_OPTS) -o $@ $<
