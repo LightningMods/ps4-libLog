@@ -549,72 +549,58 @@ const char *logHexdump(LogLevels log_level, const void *ptr, int len, bool color
   if (colorize) {
     switch (log_level) {
     case LL_Info:
-      memcpy(ret + offset, KGRN, sizeof(KGRN) - 1);
-      offset += sizeof(KGRN) - 1;
+      offset += snprintf(ret + offset, sizeof(KGRN), "%s", KGRN);
       break;
     case LL_Warn:
-      memcpy(ret + offset, KYEL, sizeof(KYEL) - 1);
-      offset += sizeof(KYEL) - 1;
+      offset += snprintf(ret + offset, sizeof(KYEL), "%s", KYEL);
       break;
     case LL_Error:
-      memcpy(ret + offset, KRED, sizeof(KRED) - 1);
-      offset += sizeof(KRED) - 1;
+      offset += snprintf(ret + offset, sizeof(KRED), "%s", KRED);
       break;
     case LL_Debug:
-      memcpy(ret + offset, KGRY, sizeof(KGRY) - 1);
-      offset += sizeof(KGRY) - 1;
+      offset += snprintf(ret + offset, sizeof(KGRY), "%s", KGRY);
       break;
     case LL_None:
     default:
-      memcpy(ret + offset, KNRM, sizeof(KNRM) - 1);
-      offset += sizeof(KNRM) - 1;
+      offset += snprintf(ret + offset, sizeof(KNRM), "%s", KNRM);
       break;
     }
   }
 
   for (int i = 0; i < len; i += 0x10) {
-    sprintf(ret + offset, "%08X: ", i);
-    offset += 10;
+    offset += sprintf(ret + offset, "%08X: ", i);
     for (int j = 0; j < 0x10; j++) {
       if (i + j < len) {
-        sprintf(ret + offset, "%02X ", buf[i + j]);
-        offset += 3;
+        offset += sprintf(ret + offset, "%02X ", buf[i + j]);
       } else {
-        memcpy(ret + offset, "   ", 3);
-        offset += 3;
+        offset += sprintf(ret + offset, "%s", "   ");
       }
       if (j == 7) {
-        memcpy(ret + offset, " ", 1);
-        offset++;
+        offset += sprintf(ret + offset, "%s", " ");
       }
     }
 
-    memcpy(ret + offset, " ", 1);
-    offset++;
+    offset += sprintf(ret + offset, "%s", " ");
 
     for (int j = 0; j < 0x10; j++) {
       if (i + j < len) {
         if (isprint(buf[i + j])) {
-          sprintf(ret + offset, "%c", buf[i + j]);
-          offset++;
+          offset += sprintf(ret + offset, "%c", buf[i + j]);
         } else {
-          memcpy(ret + offset, ".", 1);
-          offset++;
+          offset += sprintf(ret + offset, "%s", ".");
         }
       }
     }
 
     if (i + 0x10 < len) {
-      memcpy(ret + offset, "\n", 1);
-      offset++;
+      offset += sprintf(ret + offset, "%s", "\n");
     }
   }
   if (colorize) {
-    memcpy(ret + offset, KNRM, sizeof(KNRM) - 1);
-    offset += sizeof(KNRM) - 1;
+    offset += snprintf(ret + offset, sizeof(KNRM), "%s", KNRM);
   }
 
-  memcpy(ret + offset, "\n", 1);
+  offset += sprintf(ret + offset, "%s", "\n");
 
   return ret;
 }
