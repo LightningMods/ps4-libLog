@@ -76,28 +76,18 @@ const char *_logFormatOutput(LogLevels log_level, bool colorize, const char *fun
 const char *_logPrettyFunction(const char *prettyFunction);
 
 void _logSystem(LogLevels log_level, const char *function, int32_t line, const char *format, ...);
-#define logSystem(log_level, format, ...)                                    \
-  do {                                                                       \
-    const char *pretty_function = _logPrettyFunction(__PRETTY_FUNCTION__);   \
-    if (!pretty_function) {                                                  \
-      break;                                                                 \
-    }                                                                        \
-    _logSystem(log_level, pretty_function, __LINE__, format, ##__VA_ARGS__); \
-    free((void *)pretty_function);                                           \
+#define logSystem(log_level, format, ...)                                                            \
+  do {                                                                                               \
+    _logSystem(log_level, _logPrettyFunction(__PRETTY_FUNCTION__), __LINE__, format, ##__VA_ARGS__); \
   } while (0)
 void logSystemUnformatted(LogLevels log_level, const char *format, ...);
 void logSystemSetLogLevel(LogLevels log_level);
 LogLevels logSystemGetLogLevel();
 
 void _logFile(LogLevels log_level, const char *path, const char *function, int32_t line, const char *format, ...);
-#define logFile(log_level, file, format, ...)                                    \
-  do {                                                                           \
-    const char *pretty_function = _logPrettyFunction(__PRETTY_FUNCTION__);       \
-    if (!pretty_function) {                                                      \
-      break;                                                                     \
-    }                                                                            \
-    _logFile(log_level, file, pretty_function, __LINE__, format, ##__VA_ARGS__); \
-    free((void *)pretty_function);                                               \
+#define logFile(log_level, file, format, ...)                                                            \
+  do {                                                                                                   \
+    _logFile(log_level, file, _logPrettyFunction(__PRETTY_FUNCTION__), __LINE__, format, ##__VA_ARGS__); \
   } while (0)
 void logFileUnformatted(LogLevels log_level, const char *path, const char *format, ...);
 void logFileSetLogLevel(LogLevels log_level);
@@ -116,14 +106,9 @@ void logSocketClose();
 int logSocketGetSocket();
 void _sendSocket(const char *ip_address, uint16_t port, const char *data, size_t len);
 void _logSocket(LogLevels log_level, const char *ip_address, uint16_t port, const char *function, int32_t line, const char *format, ...);
-#define logSocket(log_level, ip_address, port, format, ...)                                    \
-  do {                                                                                         \
-    const char *pretty_function = _logPrettyFunction(__PRETTY_FUNCTION__);                     \
-    if (!pretty_function) {                                                                    \
-      break;                                                                                   \
-    }                                                                                          \
-    _logSocket(log_level, ip_address, port, pretty_function, __LINE__, format, ##__VA_ARGS__); \
-    free((void *)pretty_function);                                                             \
+#define logSocket(log_level, ip_address, port, format, ...)                                                            \
+  do {                                                                                                                 \
+    _logSocket(log_level, ip_address, port, _logPrettyFunction(__PRETTY_FUNCTION__), __LINE__, format, ##__VA_ARGS__); \
   } while (0)
 void logSocketUnformatted(LogLevels log_level, const char *ip_address, uint16_t port, const char *format, ...);
 void logSocketSetLogLevel(LogLevels log_level);
@@ -135,50 +120,25 @@ void logNotificationCustom(int device, OrbisNotificationRequest *notification_re
 
 const char *logHexdump(LogLevels log_level, const void *ptr, int len, bool colorize = false);
 
-#define logHexdumpSystem(log_level, ptr, len)                          \
-  do {                                                                 \
-    const char *formatted_hex = logHexdump(log_level, ptr, len, true); \
-    if (!formatted_hex) {                                              \
-      break;                                                           \
-    }                                                                  \
-    logSystemUnformatted(log_level, formatted_hex);                    \
-    free((void *)formatted_hex);                                       \
+#define logHexdumpSystem(log_level, ptr, len)                               \
+  do {                                                                      \
+    logSystemUnformatted(log_level, logHexdump(log_level, ptr, len, true)); \
   } while (0)
-#define logHexdumpSystemUnformatted(log_level, ptr, len)                \
-  do {                                                                  \
-    const char *formatted_hex = logHexdump(log_level, ptr, len, false); \
-    if (!formatted_hex) {                                               \
-      break;                                                            \
-    }                                                                   \
-    logSystemUnformatted(log_level, formatted_hex);                     \
-    free((void *)formatted_hex);                                        \
+#define logHexdumpSystemUnformatted(log_level, ptr, len)                     \
+  do {                                                                       \
+    logSystemUnformatted(log_level, logHexdump(log_level, ptr, len, false)); \
   } while (0)
-#define logHexdumpFile(log_level, path, ptr, len)                       \
-  do {                                                                  \
-    const char *formatted_hex = logHexdump(log_level, ptr, len, false); \
-    if (!formatted_hex) {                                               \
-      break;                                                            \
-    }                                                                   \
-    logFileUnformatted(log_level, path, formatted_hex);                 \
-    free((void *)formatted_hex);                                        \
+#define logHexdumpFile(log_level, path, ptr, len)                                \
+  do {                                                                           \
+    logFileUnformatted(log_level, path, logHexdump(log_level, ptr, len, false)); \
   } while (0)
-#define logHexdumpSocket(log_level, ip_address, port, ptr, len)        \
-  do {                                                                 \
-    const char *formatted_hex = logHexdump(log_level, ptr, len, true); \
-    if (!formatted_hex) {                                              \
-      break;                                                           \
-    }                                                                  \
-    logSocketUnformatted(log_level, ip_address, port, formatted_hex);  \
-    free((void *)formatted_hex);                                       \
+#define logHexdumpSocket(log_level, ip_address, port, ptr, len)                               \
+  do {                                                                                        \
+    logSocketUnformatted(log_level, ip_address, port, logHexdump(log_level, ptr, len, true)); \
   } while (0)
-#define logHexdumpSocketUnformatted(log_level, ip_address, port, ptr, len) \
-  do {                                                                     \
-    const char *formatted_hex = logHexdump(log_level, ptr, len, false);    \
-    if (!formatted_hex) {                                                  \
-      break;                                                               \
-    }                                                                      \
-    logSocketUnformatted(log_level, ip_address, port, formatted_hex);      \
-    free((void *)formatted_hex);                                           \
+#define logHexdumpSocketUnformatted(log_level, ip_address, port, ptr, len)                     \
+  do {                                                                                         \
+    logSocketUnformatted(log_level, ip_address, port, logHexdump(log_level, ptr, len, false)); \
   } while (0)
 
 #ifdef __cplusplus
