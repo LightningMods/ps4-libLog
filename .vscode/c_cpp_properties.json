@@ -1,0 +1,19 @@
+{
+  "configurations": [
+    {
+      "name": "Linux",
+      "intelliSenseMode": "clang-x64",
+      "includePath": [
+        "${OO_PS4_TOOLCHAIN}/include/*",
+        "${OO_PS4_TOOLCHAIN}/include/c++/v1/*",
+        "${workspaceFolder}/include/*",
+        "${workspaceFolder}/src/*"
+      ],
+      "defines": ["__ORBIS__"],
+      "compilerPath": "/usr/bin/clang++",
+      "cStandard": "c17",
+      "cppStandard": "c++17"
+    }
+  ],
+  "version": 4
+}

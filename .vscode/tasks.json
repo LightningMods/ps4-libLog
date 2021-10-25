@@ -1,0 +1,86 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build debug",
+      "type": "shell",
+      "command": "make clean && clear && make __TEST__=true",
+      "group": {"kind":"build", "isDefault":true},
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
+      "label": "Build release",
+      "type": "shell",
+      "command": "make clean && clear && make && 7z a libLog_release.7z libLog.prx libLog_stub.so ./include/libLog_stub.h LICENSE README.md && make clean",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
+      "label": "Run clang-format",
+      "type": "shell",
+      "command": "find ./src -regex '.*\\.\\(c\\|cc\\|cpp\\|h\\|hpp\\)' -exec clang-format -style=file -i {} \\; && find ./include -regex '.*\\.\\(c\\|cc\\|cpp\\|h\\|hpp\\)' -exec clang-format -style=file -i {} \\;",
+      "group": "test",
+      "presentation": {
+        "reveal": "never",
+        "panel": "shared",
+        "close": true
+      }
+    },
+    {
+      "label": "Run Flawfinder",
+      "type": "shell",
+      "command": "flawfinder src/ > flawfinder.log",
+      "group": "test",
+      "presentation": {
+        "reveal": "never",
+        "panel": "shared",
+        "close": true
+      }
+    },
+    {
+      "label": "Run Cppcheck",
+      "type": "shell",
+      "command": "cppcheck src/ > cppcheck.log",
+      "group": "test",
+      "presentation": {
+        "reveal": "never",
+        "panel": "shared",
+        "close": true
+      }
+    },
+    {
+      "label": "Run PVS-Studio",
+      "type": "shell",
+      "command": "pvs-studio-analyzer trace -- make && pvs-studio-analyzer analyze -e ${OO_PS4_TOOLCHAIN}/\\* -o project.log && plog-converter -a GA:1,2 -t tasklist -o pvs-studio.log project.log && make clean && rm strace_out && rm project.log",
+      "group": "test",
+      "presentation": {
+        "reveal": "never",
+        "panel": "shared",
+        "close": true
+      }
+    },
+    {
+      "label": "Run Lint/Checks",
+      "dependsOrder": "sequence",
+      "dependsOn": ["Run clang-format", "Run Flawfinder", "Run Cppcheck", "Run PVS-Studio"],
+      "group": {"kind":"test", "isDefault":true},
+      "presentation": {
+        "reveal": "never",
+        "panel": "shared",
+        "close": true
+      }
+    }
+  ]
+}

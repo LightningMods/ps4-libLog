@@ -1,0 +1,17 @@
+# IDE config
+.vscode/settings.json
+
+# Testing Data
+flawfinder.log
+cppcheck.log
+pvs-studio.log
+strace_out
+project.log
+log.txt
+
+# Build artifacts
+main
+build/
+libLog.prx
+libLog_stub.so
+libLog_release.7z
