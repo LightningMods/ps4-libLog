@@ -41,7 +41,7 @@
     {
       "label": "Run Flawfinder",
       "type": "shell",
-      "command": "flawfinder src/ > flawfinder.log",
+      "command": "flawfinder -m 0 src/ > flawfinder.log",
       "group": "test",
       "presentation": {
         "reveal": "never",

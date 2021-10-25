@@ -167,9 +167,7 @@ const char *_logFormatOutput(LogLevels log_level, bool colorize, const char *fun
 }
 
 const char *_logPrettyFunction(const char *prettyFunction) {
-  const char *temp_pos = strlaststr(prettyFunction, " ");
-  size_t pos = temp_pos - prettyFunction + 1;
-
+  size_t pos = strlaststr(prettyFunction, " ") - prettyFunction + 1;
   size_t len = strlen(prettyFunction) - pos - 1;
   char *output_buffer = (char *)malloc(len);
   if (!output_buffer) {
@@ -182,11 +180,11 @@ const char *_logPrettyFunction(const char *prettyFunction) {
 }
 
 void _logSystem(LogLevels log_level, const char *function, int32_t line, const char *format, ...) {
-  if (g_log_level <= LL_None) {
+  if (logGetLogLevel() <= LL_None) {
     return;
   }
 
-  if (log_level > g_log_level) {
+  if (log_level > logGetLogLevel()) {
     return;
   }
 
@@ -209,11 +207,11 @@ void _logSystem(LogLevels log_level, const char *function, int32_t line, const c
 }
 
 void logSystemUnformatted(LogLevels log_level, const char *format, ...) {
-  if (g_log_level <= LL_None) {
+  if (logGetLogLevel() <= LL_None) {
     return;
   }
 
-  if (log_level > g_log_level) {
+  if (log_level > logGetLogLevel()) {
     return;
   }
 
@@ -246,11 +244,11 @@ LogLevels logSystemGetLogLevel() {
 }
 
 void _logFile(LogLevels log_level, const char *path, const char *function, int32_t line, const char *format, ...) {
-  if (g_log_level <= LL_None) {
+  if (logGetLogLevel() <= LL_None) {
     return;
   }
 
-  if (log_level > g_log_level) {
+  if (log_level > logGetLogLevel()) {
     return;
   }
 
@@ -275,11 +273,11 @@ void _logFile(LogLevels log_level, const char *path, const char *function, int32
 }
 
 void logFileUnformatted(LogLevels log_level, const char *path, const char *format, ...) {
-  if (g_log_level <= LL_None) {
+  if (logGetLogLevel() <= LL_None) {
     return;
   }
 
-  if (log_level > g_log_level) {
+  if (log_level > logGetLogLevel()) {
     return;
   }
 
@@ -315,14 +313,14 @@ LogLevels logFileGetLogLevel() {
 }
 
 bool logFileOpen(const char *path) {
-  if (g_log_file) {
+  if (logFileGetLogFile()) {
     // We should either close the currently open file and open the new file, or return false to "fail"
     return false; // or logFileClose();
   }
 
   g_log_file = fopen(path, "a");
 
-  if (!g_log_file) {
+  if (!logFileGetLogFile()) {
     return false;
   }
 
@@ -330,7 +328,7 @@ bool logFileOpen(const char *path) {
 }
 
 void logFileClose() {
-  if (!g_log_file) {
+  if (!logFileGetLogFile()) {
     return;
   }
 
@@ -366,7 +364,7 @@ uint16_t logSocketGetPort() {
 }
 
 bool logSocketOpen() {
-  if (g_socket < 0) {
+  if (logSocketGetSocket() < 0) {
     if ((g_socket = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
       return false;
     }
@@ -376,12 +374,16 @@ bool logSocketOpen() {
 }
 
 void logSocketClose() {
-  if (g_socket < 0) {
+  if (logSocketGetSocket() < 0) {
     return;
   }
 
   close(g_socket);
   g_socket = -1;
+}
+
+int logSocketGetSocket() {
+  return g_socket;
 }
 
 void _sendSocket(const char *ip_address, uint16_t port, const char *data, size_t len) {
@@ -392,11 +394,11 @@ void _sendSocket(const char *ip_address, uint16_t port, const char *data, size_t
   servaddr.sin_addr.s_addr = inet_addr(ip_address);
   servaddr.sin_port = htons(port);
 
-  sendto(g_socket, data, len, 0, (sockaddr *)&servaddr, sizeof(servaddr));
+  sendto(logSocketGetSocket(), data, len, 0, (sockaddr *)&servaddr, sizeof(servaddr));
 }
 
 void _logSocket(LogLevels log_level, const char *ip_address, uint16_t port, const char *function, int32_t line, const char *format, ...) {
-  if (g_socket < 0) {
+  if (logSocketGetSocket() < 0) {
     return;
   }
 
@@ -418,15 +420,15 @@ void _logSocket(LogLevels log_level, const char *ip_address, uint16_t port, cons
 }
 
 void logSocketUnformatted(LogLevels log_level, const char *ip_address, uint16_t port, const char *format, ...) {
-  if (g_log_level <= LL_None) {
+  if (logGetLogLevel() <= LL_None) {
     return;
   }
 
-  if (log_level > g_log_level) {
+  if (log_level > logGetLogLevel()) {
     return;
   }
 
-  if (g_socket < 0) {
+  if (logSocketGetSocket() < 0) {
     return;
   }
 
@@ -487,8 +489,8 @@ void logNotificationCustomImage(const char *icon_uri, const char *format, ...) {
   notification_request.unk3 = 0;
   notification_request.use_icon_image_uri = 1;
   notification_request.target_id = -1;
-  if (strnlen(icon_uri, sizeof(notification_request.uri)) + 1 <= sizeof(notification_request.uri)) { // This is just a check to make sure it's smaller than, or equal to, the buffer it's being moved to
-    memcpy(notification_request.uri, icon_uri, strlen(icon_uri) + 1);                                // Flawfinder: ignore. Size is checked above
+  if (strnlen(icon_uri, sizeof(notification_request.uri)) + 1 <= sizeof(notification_request.uri)) {     // This is just a check to make sure it's smaller than, or equal to, the buffer it's being moved to
+    memcpy(notification_request.uri, icon_uri, strnlen(icon_uri, sizeof(notification_request.uri) - 1)); // Flawfinder: ignore. Size is checked above
   } else {
     const char default_icon_uri[38] = "cxml://psnotification/tex_icon_system";    // Flawfinder: ignore. It's statically size but it's only used in the next line, and it's size it is used
     memcpy(notification_request.uri, default_icon_uri, sizeof(default_icon_uri)); // Flawfinder: ignore. default_icon_uri has a fixed size here and is smaller than notification_request.uri

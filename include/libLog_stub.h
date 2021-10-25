@@ -89,6 +89,7 @@ uint16_t (*logSocketGetPort)() = NULL;
 
 bool (*logSocketOpen)() = NULL;
 void (*logSocketClose)() = NULL;
+int (*logSocketGetSocket)() = NULL;
 void (*_sendSocket)(const char *ip_address, uint16_t port, const char *data, size_t len) = NULL;
 void (*_logSocket)(LogLevels log_level, const char *ip_address, uint16_t port, const char *function, int32_t line, const char *format, ...) = NULL;
 #define logSocket(log_level, ip_address, port, format, ...)                                    \

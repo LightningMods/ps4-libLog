@@ -113,6 +113,7 @@ uint16_t logSocketGetPort();
 
 bool logSocketOpen();
 void logSocketClose();
+int logSocketGetSocket();
 void _sendSocket(const char *ip_address, uint16_t port, const char *data, size_t len);
 void _logSocket(LogLevels log_level, const char *ip_address, uint16_t port, const char *function, int32_t line, const char *format, ...);
 #define logSocket(log_level, ip_address, port, format, ...)                                    \
